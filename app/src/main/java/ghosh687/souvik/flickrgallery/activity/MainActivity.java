@@ -5,6 +5,8 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -27,6 +29,7 @@ import ghosh687.souvik.flickrgallery.adapter.MyAdapter;
 import ghosh687.souvik.flickrgallery.api.FlickrApi;
 import ghosh687.souvik.flickrgallery.modelclass.FlickrGallery;
 import ghosh687.souvik.flickrgallery.modelclass.Photo;
+import ghosh687.souvik.flickrgallery.viewmodel.ImageslistViewModel;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -35,10 +38,13 @@ public class MainActivity extends AppCompatActivity {
 
     DrawerLayout drawerLayout;
     ActionBarDrawerToggle actionBarDrawerToggle;
-    AlertDialog alertDialog;
+    public static AlertDialog alertDialog;
 
-    public static ArrayList<String> imageurls = new ArrayList<>();
+    public static List<Photo> imageurls;
     RecyclerView images;
+    ImageslistViewModel imageslistViewModel;
+    MyAdapter myAdapter;
+    public int ch=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,8 +57,26 @@ public class MainActivity extends AppCompatActivity {
         LinearLayoutManager llm = new LinearLayoutManager(this);
         llm.setOrientation(LinearLayoutManager.VERTICAL);
         images.setLayoutManager(llm);
+        myAdapter = new MyAdapter(imageurls,MainActivity.this);
+        images.setAdapter(myAdapter);
 
-        getdata();
+        //viewmodel
+        imageslistViewModel= ViewModelProviders.of(this).get(ImageslistViewModel.class);
+        imageslistViewModel.getImageslist().observe(this, new Observer<List<Photo>>() {
+            @Override
+            public void onChanged(List<Photo> photos) {
+                if(photos!=null){
+                    imageurls=photos;
+                    myAdapter.setImageurlList(photos);
+                }
+                if(ch==0){
+                    alertDialog.dismiss();
+                    ch+=1;
+                }
+            }
+        });
+        imageslistViewModel.getdata();
+
         createdrawerLayout();
         showalertdialog();
     }
@@ -74,28 +98,6 @@ public class MainActivity extends AppCompatActivity {
         }, 7000);
     }
 
-    private void getdata() {
-        Call<FlickrGallery> galleryCall = FlickrApi.getPostService().getImages();
-        galleryCall.enqueue(new Callback<FlickrGallery>() {
-            @Override
-            public void onResponse(Call<FlickrGallery> call, Response<FlickrGallery> response) {
-                if(response.body().getStat().equals("ok")){
-                    for (int k = 0; k < 30; k++) {
-                        imageurls.add(response.body().getPhotos().getPhoto().get(k).getUrlS());
-                    }
-                    MyAdapter myadapter = new MyAdapter(imageurls,MainActivity.this);
-                    images.setAdapter(myadapter);
-                    myadapter.notifyDataSetChanged();
-                    alertDialog.dismiss();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<FlickrGallery> call, Throwable t) {
-
-            }
-        });
-    }
 
     private void createdrawerLayout() {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);

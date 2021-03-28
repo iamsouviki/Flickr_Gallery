@@ -15,16 +15,25 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import ghosh687.souvik.flickrgallery.R;
+import ghosh687.souvik.flickrgallery.activity.MainActivity;
+import ghosh687.souvik.flickrgallery.modelclass.FlickrGallery;
+import ghosh687.souvik.flickrgallery.modelclass.Photo;
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     Context context;
-    ArrayList<String> photos;
+    List<Photo> photos;
 
-    public MyAdapter(ArrayList<String> image, Context context){
+    public MyAdapter(List<Photo> image, Context context){
         this.context=context;
         this.photos=image;
+    }
+
+    public void setImageurlList(List<Photo> imageurlList){
+        this.photos=imageurlList;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -37,14 +46,18 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        if(!TextUtils.isEmpty(photos.get(position))){
-            Glide.with(context).load(Uri.parse(photos.get(position))).into(holder.flickrimage);
+        String pht=photos.get(position).getUrlS();
+        if(!TextUtils.isEmpty(pht)){
+            Glide.with(context).load(Uri.parse(pht)).into(holder.flickrimage);
         }
     }
 
     @Override
     public int getItemCount() {
-        return photos.size();
+        if(photos!=null) {
+            return photos.size();
+        }
+        return 0;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder{
